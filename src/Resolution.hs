@@ -12,7 +12,7 @@ instance Show Literal where
     show (Literal a b) = if a then b else "¬" ++ b
 
 instance Eq Literal where
-    (Literal a b) == (Literal x y) = a == x && b == y  
+    (Literal a b) == (Literal x y) = a == x && b == y
 
 instance Ord Literal where
     compare (Literal a b) (Literal x y) = if compare b y == EQ then compare a x else compare b y
@@ -35,18 +35,18 @@ resolve x y = resolveBE 0 x y []
 
 -- Make all resolvents of two clauses
 resolveBE :: Int -> Clause -> Clause -> ClauseSet -> ClauseSet
-resolveBE n xs y acc
+resolveBE n xs y acc 
     | n == length xs = acc
-    | contains_complement (xs !! n) y && not ((resolvent (xs !! n) xs y) `elem` acc) = resolveBE (n+1) xs y ((resolvent (xs !! n) xs y):acc)  
+    | contains_complement (xs !! n) y && not ((resolvent (xs !! n) xs y) `elem` acc) = resolveBE (n+1) xs y ((resolvent (xs !! n) xs y):acc)
     | otherwise = resolveBE (n+1) xs y acc
 
 -- Initialize the resolvation
 resN :: ClauseSet -> ClauseSet
-resN x = resNBE 0 (head x) (tail x) []
+resN x = resNBE 0 (head sort_x) (tail sort_x) sort_x where sort_x = (map (\l -> sort l) x)
 
 -- Make all resolvents of Res(n-1)
 resNBE :: Int -> Clause -> ClauseSet -> ClauseSet -> ClauseSet
-resNBE n x y acc
+resNBE n x y acc 
     | null y = acc
     | n == length y = resNBE 0 (head y) (tail y) acc
     | otherwise = resNBE (n+1) x y (acc `union` (resolve x (y !! n)))
@@ -57,8 +57,8 @@ resX x = if a == True then ("Satisfiable!", b, c) else ("Not Satisfiable!", b, c
 
 -- Calculate Res(n) until [] € Res(n) or Res(n) = Res(n-1)
 resXBE :: ClauseSet -> Int -> ClauseSet -> (Bool, Int, ClauseSet)
-resXBE x n acc
+resXBE x n acc 
     | [] `elem` acc = (False, n, acc)
-    | acc `union`(resN (x `union` acc)) == acc = (True, n, acc `union` resn_x)
+    | acc `union`(resN (x `union` acc)) == acc = (True, n, acc `union`(resN (x `union` acc)))
     | otherwise = resXBE (acc `union` x) (n+1) (acc `union` resn_x)
     where resn_x = resN x
