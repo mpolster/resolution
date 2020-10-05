@@ -1,9 +1,8 @@
--- Implementation of the resolution algorithm in propositional logic
 module Resolution (Literal (..), resX, resN) where
--- needed imports
+
 import Data.List (union, sort)
 
--- Fundamental Data Structures and type aliases
+-- Fundamental data structures and type aliases
 data Literal = Literal {sig :: Bool, name :: String}
 type Clause = [Literal]
 type ClauseSet = [Clause]
@@ -48,15 +47,15 @@ resNBE n x y acc
     | otherwise = resNBE (n+1) x y (acc `union` (resolve x (y !! n)))
 
 -- Init calculating Res(*), error handling
-resX :: ClauseSet -> (String, Int, ClauseSet)
-resX x = case resXBE (map (\c -> sort c) x) 0 [] of
+resX :: ClauseSet -> (String, Int, [(String, ClauseSet)])
+resX x = case resXBE (map (\c -> sort c) x) 0 [] [] of
     Just (a, b, c) -> if a == True then ("Satisfiable!", b, c) else ("Not Satisfiable!", b, c)
     Nothing -> ("Error!", 0, [])
 
 -- Calculate Res(n) until [] \in Res(n) or Res(n) = Res(n-1)
-resXBE :: ClauseSet -> Int -> ClauseSet -> Maybe (Bool, Int, ClauseSet)
-resXBE x n acc 
+resXBE :: ClauseSet -> Int -> [(String, ClauseSet)]-> ClauseSet -> Maybe (Bool, Int, [(String, ClauseSet)])
+resXBE x n res acc 
     | null x = Nothing
-    | [] `elem` x = Just (False, n, x)
-    | x == acc = Just (True, (n-1), x)
-    | otherwise = resXBE (acc `union` (resN x)) (n+1) (acc `union` x)
+    | [] `elem` x = Just (False, n, (res ++ [(if n == 0 then "Res" ++ (show n) else "Res" ++ (show n) ++ " = " ++ "Res" ++ (show (n-1)) ++ " +", (filter (\s -> s `notElem` acc ) x))]))
+    | x == acc = Just (True, (n-1), res)
+    | otherwise = resXBE (acc `union` (resN x)) (n+1) (res ++ [(if n == 0 then "Res" ++ (show n) else "Res" ++ (show n) ++ " = " ++ "Res" ++ (show (n-1)) ++ " +", (filter (\s -> s `notElem` acc ) x))]) (acc `union` x) 
