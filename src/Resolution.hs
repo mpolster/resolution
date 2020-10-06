@@ -1,4 +1,4 @@
-module Resolution (Literal (..), resX, resN) where
+module Resolution (Literal (..), resN, resX) where
 
 import Data.List (union, sort)
 
@@ -32,8 +32,9 @@ resolve x y = resolveBE 0 x y []
 resolveBE :: Int -> Clause -> Clause -> ClauseSet -> ClauseSet
 resolveBE n xs y acc 
     | n == length xs = acc
-    | (complement (xs !! n)) `elem` y && not ((resolvent (xs !! n) xs y) `elem` acc) = resolveBE (n+1) xs y ((resolvent (xs !! n) xs y):acc)
+    | (complement (xs !! n)) `elem` y && not (res `elem` acc) = resolveBE (n+1) xs y (res:acc)
     | otherwise = resolveBE (n+1) xs y acc
+    where res = resolvent (xs !! n) xs y
 
 -- Initialize the resolvation
 resN :: ClauseSet -> ClauseSet
@@ -56,6 +57,6 @@ resX x = case resXBE (map (\c -> sort c) x) 0 [] [] of
 resXBE :: ClauseSet -> Int -> [(String, ClauseSet)]-> ClauseSet -> Maybe (Bool, Int, [(String, ClauseSet)])
 resXBE x n res acc 
     | null x = Nothing
-    | [] `elem` x = Just (False, n, (res ++ [(if n == 0 then "Res" ++ (show n) else "Res" ++ (show n) ++ " = " ++ "Res" ++ (show (n-1)) ++ " +", (filter (\s -> s `notElem` acc ) x))]))
+    | [] `elem` x = Just (False, n, (res ++ [("Res_" ++ (show n), (filter (\s -> s `notElem` acc ) x))]))
     | x == acc = Just (True, (n-1), res)
-    | otherwise = resXBE (acc `union` (resN x)) (n+1) (res ++ [(if n == 0 then "Res" ++ (show n) else "Res" ++ (show n) ++ " = " ++ "Res" ++ (show (n-1)) ++ " +", (filter (\s -> s `notElem` acc ) x))]) (acc `union` x) 
+    | otherwise = resXBE (acc `union` (resN x)) (n+1) (res ++ [("Res_" ++ (show n), (filter (\s -> s `notElem` acc ) x))]) (acc `union` x)
